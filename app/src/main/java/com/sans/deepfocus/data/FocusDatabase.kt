@@ -13,6 +13,12 @@ data class SessionEntity(
     val tag: String? = null
 )
 
+@Entity(tableName = "tags")
+data class TagEntity(
+    @PrimaryKey val name: String,
+    val color: Int = 0xFF6200EE.toInt() 
+)
+
 @Entity(tableName = "sounds")
 data class SoundEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -41,6 +47,18 @@ interface SessionDao {
 }
 
 @Dao
+interface TagDao {
+    @Query("SELECT * FROM tags")
+    fun getAllTags(): Flow<List<TagEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertTag(tag: TagEntity)
+
+    @Delete
+    suspend fun deleteTag(tag: TagEntity)
+}
+
+@Dao
 interface SoundDao {
     @Query("SELECT * FROM sounds")
     fun getAllSounds(): Flow<List<SoundEntity>>
@@ -58,10 +76,11 @@ interface SoundDao {
     suspend fun deleteSound(sound: SoundEntity)
 }
 
-@Database(entities = [SessionEntity::class, SoundEntity::class], version = 2)
+@Database(entities = [SessionEntity::class, SoundEntity::class, TagEntity::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
     abstract fun soundDao(): SoundDao
+    abstract fun tagDao(): TagDao
 
     companion object {
         @Volatile

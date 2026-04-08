@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
         database = AppDatabase.getInstance(this)
         timerManager = TimerManager.getInstance(database.sessionDao())
         
-        initializeSounds()
+        initializeData()
 
         enableEdgeToEdge()
         setContent {
@@ -80,7 +80,12 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("timer") {
-                            TimerScreen(TimerViewModel(application, timerManager, database.soundDao()))
+                            TimerScreen(TimerViewModel(
+                                application, 
+                                timerManager, 
+                                database.soundDao(),
+                                database.tagDao()
+                            ))
                         }
                         composable("stats") {
                             StatsScreen(StatsViewModel(database.sessionDao()))
@@ -91,13 +96,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun initializeSounds() {
+    private fun initializeData() {
         lifecycleScope.launch {
+            // Initialize Sounds
             val sounds = database.soundDao().getAllSounds().first()
             if (sounds.isEmpty()) {
                 database.soundDao().insertSound(
                     SoundEntity(name = "No Sound", uri = "", isSelected = true)
                 )
+            }
+            
+            // Initialize Tags
+            val tags = database.tagDao().getAllTags().first()
+            if (tags.isEmpty()) {
+                listOf("Work", "Study", "Exercise", "Other").forEach {
+                    database.tagDao().insertTag(com.sans.deepfocus.data.TagEntity(it))
+                }
             }
         }
     }

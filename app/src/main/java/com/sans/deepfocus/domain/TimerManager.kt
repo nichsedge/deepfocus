@@ -46,6 +46,13 @@ class TimerManager private constructor(private val sessionDao: SessionDao) {
     private val _sessionMode = MutableStateFlow(SessionMode.POMODORO)
     val sessionMode = _sessionMode.asStateFlow()
 
+    private val _selectedTag = MutableStateFlow<String?>(null)
+    val selectedTag = _selectedTag.asStateFlow()
+
+    fun setSelectedTag(tag: String?) {
+        _selectedTag.value = tag
+    }
+
     init {
         _remainingTime.value = _pomodoroDuration.value
     }
@@ -113,7 +120,8 @@ class TimerManager private constructor(private val sessionDao: SessionDao) {
                     startTime = actualStartTime,
                     endTime = System.currentTimeMillis(),
                     duration = duration,
-                    mode = _sessionMode.value.name
+                    mode = _sessionMode.value.name,
+                    tag = _selectedTag.value
                 )
             )
         }

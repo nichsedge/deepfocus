@@ -20,7 +20,8 @@ import java.io.FileOutputStream
 class TimerViewModel(
     application: Application,
     private val timerManager: TimerManager,
-    private val soundDao: SoundDao
+    private val soundDao: SoundDao,
+    private val tagDao: com.sans.deepfocus.data.TagDao
 ) : AndroidViewModel(application) {
     private val analytics = AnalyticsProvider.get()
     val remainingTime: StateFlow<Long> = timerManager.remainingTime
@@ -52,6 +53,33 @@ class TimerViewModel(
 
     val selectedSound: StateFlow<SoundEntity?> = soundDao.getSelectedSound()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val availableTags: StateFlow<List<com.sans.deepfocus.data.TagEntity>> = tagDao.getAllTags()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val selectedTag: StateFlow<String?> = timerManager.selectedTag
+
+    fun selectTag(tagName: String?) {
+        timerManager.setSelectedTag(tagName)
+        analytics.trackEvent("select_tag", mapOf("tag" to (tagName ?: "none")))
+    }
+
+    fun addTag(name: String) {
+        viewModelScope.launch {
+            tagDao.insertTag(com.sans.deepfocus.data.TagEntity(name))
+            analytics.trackEvent("add_tag", mapOf("tag_name" to name))
+        }
+    }
+
+    fun deleteTag(tag: com.sans.deepfocus.data.TagEntity) {
+        viewModelScope.launch {
+            if (timerManager.selectedTag.value == tag.name) {
+                timerManager.setSelectedTag(null)
+            }
+            tagDao.deleteTag(tag)
+            analytics.trackEvent("delete_tag", mapOf("tag_name" to tag.name))
+        }
+    }
 
     fun setMode(mode: SessionMode) {
         analytics.trackEvent("change_mode", mapOf("mode" to mode.name))

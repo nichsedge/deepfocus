@@ -50,6 +50,13 @@ class StatsViewModel(private val sessionDao: SessionDao) {
         }
     }
 
+    val focusByTag = sessionDao.getAllSessions().map { sessions ->
+        sessions.groupBy { it.tag ?: "No Tag" }
+            .mapValues { entry -> entry.value.sumOf { it.duration } }
+            .toList()
+            .sortedByDescending { it.second }
+    }
+
     fun formatDuration(ms: Long): String {
         val hours = ms / (1000 * 60 * 60)
         val minutes = (ms / (1000 * 60)) % 60
@@ -64,6 +71,7 @@ fun StatsScreen(viewModel: StatsViewModel) {
     val focusTime by viewModel.totalFocusTimeToday.collectAsState(initial = 0L)
     val sessionCount by viewModel.sessionCountToday.collectAsState(initial = 0)
     val weeklyData by viewModel.weeklyDistribution.collectAsState(initial = emptyList())
+    val tagData by viewModel.focusByTag.collectAsState(initial = emptyList())
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -98,6 +106,51 @@ fun StatsScreen(viewModel: StatsViewModel) {
         // Weekly Distribution Chart
         item {
             WeeklyDistributionChart(weeklyData)
+        }
+
+        // Tag Breakdown
+        if (tagData.isNotEmpty()) {
+            item {
+                TagBreakdown(tagData, viewModel)
+            }
+        }
+    }
+}
+
+@Composable
+fun TagBreakdown(tagData: List<Pair<String, Long>>, viewModel: StatsViewModel) {
+    val totalTime = tagData.sumOf { it.second }.coerceAtLeast(1L)
+    
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "Focus by Tag",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            tagData.forEach { (tag, duration) ->
+                val proportion = duration.toFloat() / totalTime
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(tag, style = MaterialTheme.typography.bodyMedium)
+                        Text(viewModel.formatDuration(duration), style = MaterialTheme.typography.labelSmall)
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    LinearProgressIndicator(
+                        progress = { proportion },
+                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                }
+            }
         }
     }
 }

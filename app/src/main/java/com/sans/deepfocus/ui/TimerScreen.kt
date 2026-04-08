@@ -28,8 +28,12 @@ fun TimerScreen(viewModel: TimerViewModel) {
     val pomodoroDuration by viewModel.pomodoroDuration.collectAsState()
     
     val isMuted by viewModel.isMuted.collectAsState()
+    val availableTags by viewModel.availableTags.collectAsState()
+    val selectedTag by viewModel.selectedTag.collectAsState()
     
     var showSoundSelector by remember { mutableStateOf(false) }
+    var showTagDialog by remember { mutableStateOf(false) }
+    var newTagName by remember { mutableStateOf("") }
 
     val displayTime = if (sessionMode == SessionMode.POMODORO) {
         viewModel.formatTime(remainingTime)
@@ -70,19 +74,42 @@ fun TimerScreen(viewModel: TimerViewModel) {
                         onClick = { viewModel.setMode(SessionMode.STOPWATCH) } 
                     )
                 }
-                
                 if (sessionMode == SessionMode.POMODORO) {
                     DurationSelector(
                         currentMinutes = (pomodoroDuration / 60000).toInt(),
                         onDurationChange = { viewModel.setPomodoroDuration(it) }
                     )
                 }
-            } else {
-                Text(
-                    text = sessionMode.name,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+
+                TagSelector(
+                    availableTags = availableTags,
+                    selectedTag = selectedTag,
+                    onTagSelect = { viewModel.selectTag(it) },
+                    onAddTag = { showTagDialog = true },
+                    onDeleteTag = { viewModel.deleteTag(it) }
                 )
+            } else {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = sessionMode.name,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                    )
+                    selectedTag?.let {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Text(
+                                text = it,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
             }
 
             // Timer Display
@@ -104,6 +131,106 @@ fun TimerScreen(viewModel: TimerViewModel) {
                 SoundSelectorDialog(viewModel) {
                     showSoundSelector = false
                 }
+            }
+
+            if (showTagDialog) {
+                AlertDialog(
+                    onDismissRequest = { showTagDialog = false },
+                    title = { Text("New Tag") },
+                    text = {
+                        OutlinedTextField(
+                            value = newTagName,
+                            onValueChange = { newTagName = it },
+                            label = { Text("Tag Name") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                if (newTagName.isNotBlank()) {
+                                    viewModel.addTag(newTagName)
+                                    newTagName = ""
+                                    showTagDialog = false
+                                }
+                            }
+                        ) {
+                            Text("Add")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showTagDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TagSelector(
+    availableTags: List<com.sans.deepfocus.data.TagEntity>,
+    selectedTag: String?,
+    onTagSelect: (String?) -> Unit,
+    onAddTag: () -> Unit,
+    onDeleteTag: (com.sans.deepfocus.data.TagEntity) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        androidx.compose.foundation.lazy.LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            item {
+                FilterChip(
+                    selected = selectedTag == null,
+                    onClick = { onTagSelect(null) },
+                    label = { Text("None") },
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+            
+            items(availableTags.size) { index ->
+                val tag = availableTags[index]
+                FilterChip(
+                    selected = selectedTag == tag.name,
+                    onClick = { onTagSelect(tag.name) },
+                    label = { Text(tag.name) },
+                    shape = RoundedCornerShape(12.dp),
+                    trailingIcon = {
+                        if (selectedTag == tag.name) {
+                            IconButton(
+                                onClick = { onDeleteTag(tag) },
+                                modifier = Modifier.size(16.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Delete",
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+            
+            item {
+                InputChip(
+                    selected = false,
+                    onClick = onAddTag,
+                    label = { Text("Add Tag") },
+                    leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    shape = RoundedCornerShape(12.dp)
+                )
             }
         }
     }
