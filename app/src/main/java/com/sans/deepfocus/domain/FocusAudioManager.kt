@@ -11,17 +11,33 @@ class FocusAudioManager(private val context: Context) {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var fadeJob: Job? = null
 
-    fun playSound(assetPath: String) {
+    private var isMuted = false
+    private var currentUri: String? = null
+
+    fun playSound(uriString: String) {
+        if (currentUri == uriString && exoPlayer?.isPlaying == true) return
+        currentUri = uriString
+        
         stopSound()
         exoPlayer = ExoPlayer.Builder(context).build().apply {
-            val mediaItem = MediaItem.fromUri("asset:///$assetPath")
+            val uri = when {
+                uriString.startsWith("asset:///") -> android.net.Uri.parse(uriString)
+                uriString.startsWith("/") -> android.net.Uri.fromFile(java.io.File(uriString))
+                else -> android.net.Uri.parse(uriString)
+            }
+            val mediaItem = MediaItem.fromUri(uri)
             setMediaItem(mediaItem)
             repeatMode = Player.REPEAT_MODE_ONE
             prepare()
-            volume = 0f
+            volume = 0f // Start at 0 for fade in
             play()
         }
-        fadeIn()
+        if (!isMuted) fadeIn()
+    }
+
+    fun setMuted(muted: Boolean) {
+        isMuted = muted
+        exoPlayer?.volume = if (muted) 0f else 1f
     }
 
     private fun fadeIn() {

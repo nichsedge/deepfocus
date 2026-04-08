@@ -11,7 +11,9 @@ import com.sans.deepfocus.domain.FocusAudioManager
 import com.sans.deepfocus.domain.TimerManager
 import com.sans.deepfocus.domain.SessionMode
 import com.sans.deepfocus.data.AppDatabase
+import com.sans.deepfocus.domain.SessionState
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.firstOrNull
 
 class FocusService : Service() {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -29,12 +31,54 @@ class FocusService : Service() {
 
     override fun onBind(intent: Intent): IBinder = binder
 
+
     override fun onCreate() {
         super.onCreate()
         val database = AppDatabase.getInstance(this)
-        timerManager = TimerManager(scope, database.sessionDao())
+        timerManager = TimerManager.getInstance(database.sessionDao())
         audioManager = FocusAudioManager(this)
+        
+        val prefs = getSharedPreferences("deepfocus_prefs", Context.MODE_PRIVATE)
+        audioManager.setMuted(prefs.getBoolean("is_muted", false))
+        
         createNotificationChannel()
+        
+        observeSessionAndSound(database)
+        observeMuteState(prefs)
+    }
+
+    private fun observeSessionAndSound(database: AppDatabase) {
+        scope.launch {
+            kotlinx.coroutines.flow.combine(
+                timerManager.sessionState,
+                database.soundDao().getSelectedSound()
+            ) { state, sound -> state to sound }
+                .collect { (state, sound) ->
+                    if (state == SessionState.RUNNING) {
+                        if (sound != null && sound.uri.isNotEmpty()) {
+                            audioManager.playSound(sound.uri)
+                        } else {
+                            audioManager.stopWithFade()
+                        }
+                    } else if (state == SessionState.PAUSED || state == SessionState.IDLE) {
+                        audioManager.stopWithFade()
+                    }
+                }
+        }
+    }
+
+    private fun observeMuteState(prefs: android.content.SharedPreferences) {
+        scope.launch {
+            val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
+                if (key == "is_muted") {
+                    audioManager.setMuted(p.getBoolean(key, false))
+                }
+            }
+            prefs.registerOnSharedPreferenceChangeListener(listener)
+            try { awaitCancellation() } finally {
+                prefs.unregisterOnSharedPreferenceChangeListener(listener)
+            }
+        }
     }
 
     private fun createNotificationChannel() {
@@ -47,7 +91,9 @@ class FocusService : Service() {
         manager.createNotificationChannel(channel)
     }
 
-    fun startSession(mode: String, durationMs: Long) {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val mode = intent?.getStringExtra("MODE") ?: "Focus"
+        
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Focusing in $mode mode")
             .setSmallIcon(android.R.drawable.ic_media_play)
@@ -55,7 +101,7 @@ class FocusService : Service() {
             .build()
         
         startForeground(NOTIFICATION_ID, notification)
-        timerManager.start(if (mode == "POMODORO") SessionMode.POMODORO else SessionMode.STOPWATCH, durationMs)
+        return START_STICKY
     }
 
     fun stopSession() {

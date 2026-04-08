@@ -3,6 +3,7 @@ package com.sans.deepfocus.ui
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -23,6 +24,12 @@ fun TimerScreen(viewModel: TimerViewModel) {
     val elapsedTime by viewModel.elapsedTime.collectAsState()
     val sessionState by viewModel.sessionState.collectAsState()
     val sessionMode by viewModel.sessionMode.collectAsState()
+    val selectedSound by viewModel.selectedSound.collectAsState()
+    val pomodoroDuration by viewModel.pomodoroDuration.collectAsState()
+    
+    val isMuted by viewModel.isMuted.collectAsState()
+    
+    var showSoundSelector by remember { mutableStateOf(false) }
 
     val displayTime = if (sessionMode == SessionMode.POMODORO) {
         viewModel.formatTime(remainingTime)
@@ -32,14 +39,14 @@ fun TimerScreen(viewModel: TimerViewModel) {
 
     val backgroundColor by animateColorAsState(
         when (sessionMode) {
-            SessionMode.POMODORO -> MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
-            SessionMode.STOPWATCH -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f)
+            SessionMode.POMODORO -> MaterialTheme.colorScheme.primary.copy(alpha = 0.03f)
+            SessionMode.STOPWATCH -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.03f)
         }
     )
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
+        color = backgroundColor
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -63,6 +70,13 @@ fun TimerScreen(viewModel: TimerViewModel) {
                         onClick = { viewModel.setMode(SessionMode.STOPWATCH) } 
                     )
                 }
+                
+                if (sessionMode == SessionMode.POMODORO) {
+                    DurationSelector(
+                        currentMinutes = (pomodoroDuration / 60000).toInt(),
+                        onDurationChange = { viewModel.setPomodoroDuration(it) }
+                    )
+                }
             } else {
                 Text(
                     text = sessionMode.name,
@@ -77,25 +91,74 @@ fun TimerScreen(viewModel: TimerViewModel) {
             // Controls
             FocusControls(sessionState, viewModel)
 
-            // Ambient Sound Indicator (Stub for Phase 2 sound control)
-            if (sessionState == SessionState.RUNNING) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        Icons.Default.Waves,
-                        contentDescription = "White Noise",
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        "Rain ON",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+            // Sound Selector Button
+            SoundIndicator(
+                selectedSound = selectedSound,
+                isMuted = isMuted,
+                onMuteToggle = { viewModel.toggleMute() }
+            ) {
+                showSoundSelector = true
+            }
+
+            if (showSoundSelector) {
+                SoundSelectorDialog(viewModel) {
+                    showSoundSelector = false
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun SoundIndicator(
+    selectedSound: com.sans.deepfocus.data.SoundEntity?,
+    isMuted: Boolean,
+    onMuteToggle: () -> Unit,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Surface(
+            onClick = onClick,
+            shape = RoundedCornerShape(24.dp, 8.dp, 8.dp, 24.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+        ) {
+            Row(
+                modifier = Modifier.padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Waves,
+                    contentDescription = "Sound Settings",
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    selectedSound?.name ?: "No Sound",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+        
+        Spacer(Modifier.width(2.dp))
+        
+        Surface(
+            onClick = onMuteToggle,
+            shape = RoundedCornerShape(8.dp, 24.dp, 24.dp, 8.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+        ) {
+            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+                Icon(
+                    if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                    contentDescription = if (isMuted) "Unmute" else "Mute",
+                    tint = if (isMuted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
     }
@@ -109,9 +172,38 @@ fun ModeButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
             containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
             contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
         ),
+        shape = RoundedCornerShape(12.dp),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
     ) {
         Text(text)
+    }
+}
+
+@Composable
+fun DurationSelector(currentMinutes: Int, onDurationChange: (Int) -> Unit) {
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        listOf(15, 25, 45, 60).forEach { mins ->
+            val isSelected = currentMinutes == mins
+            Surface(
+                onClick = { onDurationChange(mins) },
+                shape = RoundedCornerShape(12.dp),
+                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                modifier = Modifier.padding(horizontal = 4.dp)
+            ) {
+                Text(
+                    text = "${mins}m",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

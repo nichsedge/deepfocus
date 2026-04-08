@@ -22,6 +22,9 @@ import com.sans.deepfocus.data.AppDatabase
 import com.sans.deepfocus.domain.TimerManager
 import com.sans.deepfocus.ui.*
 import com.sans.deepfocus.ui.theme.DeepfocusTheme
+import com.sans.deepfocus.data.SoundEntity
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var database: AppDatabase
@@ -32,7 +35,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         database = AppDatabase.getInstance(this)
-        timerManager = TimerManager(lifecycleScope, database.sessionDao())
+        timerManager = TimerManager.getInstance(database.sessionDao())
+        
+        initializeSounds()
 
         enableEdgeToEdge()
         setContent {
@@ -75,13 +80,24 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("timer") {
-                            TimerScreen(TimerViewModel(timerManager))
+                            TimerScreen(TimerViewModel(application, timerManager, database.soundDao()))
                         }
                         composable("stats") {
                             StatsScreen(StatsViewModel(database.sessionDao()))
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun initializeSounds() {
+        lifecycleScope.launch {
+            val sounds = database.soundDao().getAllSounds().first()
+            if (sounds.isEmpty()) {
+                database.soundDao().insertSound(
+                    SoundEntity(name = "No Sound", uri = "", isSelected = true)
+                )
             }
         }
     }

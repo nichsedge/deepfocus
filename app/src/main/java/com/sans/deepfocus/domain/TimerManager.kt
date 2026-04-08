@@ -11,12 +11,28 @@ import kotlinx.coroutines.flow.asStateFlow
 enum class SessionMode { POMODORO, STOPWATCH }
 enum class SessionState { IDLE, RUNNING, PAUSED }
 
-class TimerManager(private val coroutineScope: CoroutineScope, private val sessionDao: SessionDao) {
+class TimerManager private constructor(private val sessionDao: SessionDao) {
+    private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+    companion object {
+        @Volatile
+        private var INSTANCE: TimerManager? = null
+
+        fun getInstance(sessionDao: SessionDao): TimerManager {
+            return INSTANCE ?: synchronized(this) {
+                val instance = TimerManager(sessionDao)
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
     private var actualStartTime: Long = 0
     private var startTime: Long = 0
     private var pausedTime: Long = 0
     private var initialDuration: Long = 0
     private var job: Job? = null
+    private val _pomodoroDuration = MutableStateFlow(25 * 60 * 1000L)
+    val pomodoroDuration = _pomodoroDuration.asStateFlow()
 
     private val _remainingTime = MutableStateFlow(0L)
     val remainingTime = _remainingTime.asStateFlow()
@@ -31,23 +47,31 @@ class TimerManager(private val coroutineScope: CoroutineScope, private val sessi
     val sessionMode = _sessionMode.asStateFlow()
 
     init {
-        _remainingTime.value = 25 * 60 * 1000L
+        _remainingTime.value = _pomodoroDuration.value
+    }
+
+    fun setPomodoroDuration(durationMs: Long) {
+        _pomodoroDuration.value = durationMs
+        if (_sessionMode.value == SessionMode.POMODORO && _sessionState.value == SessionState.IDLE) {
+            _remainingTime.value = _pomodoroDuration.value
+        }
     }
 
     fun setMode(mode: SessionMode) {
         if (_sessionState.value == SessionState.IDLE) {
             _sessionMode.value = mode
             if (mode == SessionMode.POMODORO) {
-                _remainingTime.value = 25 * 60 * 1000L
+                _remainingTime.value = _pomodoroDuration.value
             } else {
                 _elapsedTime.value = 0L
             }
         }
     }
 
-    fun start(mode: SessionMode? = null, durationMs: Long = 25 * 60 * 1000L) {
+    fun start(mode: SessionMode? = null, durationMs: Long? = null) {
         mode?.let { _sessionMode.value = it }
-        initialDuration = if (_sessionMode.value == SessionMode.POMODORO) durationMs else 0
+        val finalDuration = durationMs ?: _pomodoroDuration.value
+        initialDuration = if (_sessionMode.value == SessionMode.POMODORO) finalDuration else 0
         actualStartTime = System.currentTimeMillis()
         startTime = actualStartTime
         pausedTime = 0

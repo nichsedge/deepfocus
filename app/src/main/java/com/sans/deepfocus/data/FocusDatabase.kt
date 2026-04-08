@@ -13,6 +13,15 @@ data class SessionEntity(
     val tag: String? = null
 )
 
+@Entity(tableName = "sounds")
+data class SoundEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val uri: String,
+    val isCustom: Boolean = false,
+    val isSelected: Boolean = false
+)
+
 @Dao
 interface SessionDao {
     @Insert
@@ -31,9 +40,28 @@ interface SessionDao {
     fun getSessionsSince(since: Long): Flow<List<SessionEntity>>
 }
 
-@Database(entities = [SessionEntity::class], version = 1)
+@Dao
+interface SoundDao {
+    @Query("SELECT * FROM sounds")
+    fun getAllSounds(): Flow<List<SoundEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSound(sound: SoundEntity)
+
+    @Query("UPDATE sounds SET isSelected = (id = :soundId)")
+    suspend fun selectSound(soundId: Long)
+
+    @Query("SELECT * FROM sounds WHERE isSelected = 1 LIMIT 1")
+    fun getSelectedSound(): Flow<SoundEntity?>
+
+    @Delete
+    suspend fun deleteSound(sound: SoundEntity)
+}
+
+@Database(entities = [SessionEntity::class, SoundEntity::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
+    abstract fun soundDao(): SoundDao
 
     companion object {
         @Volatile
@@ -44,7 +72,9 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java, "deepfocus-db"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }
