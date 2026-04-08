@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
                             ))
                         }
                         composable("stats") {
-                            StatsScreen(StatsViewModel(database.sessionDao()))
+                            StatsScreen(StatsViewModel(database.sessionDao(), database.tagDao()))
                         }
                     }
                 }

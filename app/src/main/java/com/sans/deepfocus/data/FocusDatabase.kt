@@ -44,6 +44,9 @@ interface SessionDao {
 
     @Query("SELECT * FROM sessions WHERE startTime >= :since")
     fun getSessionsSince(since: Long): Flow<List<SessionEntity>>
+
+    @Query("UPDATE sessions SET tag = :tag WHERE id = :sessionId")
+    suspend fun updateSessionTag(sessionId: Long, tag: String?)
 }
 
 @Dao
