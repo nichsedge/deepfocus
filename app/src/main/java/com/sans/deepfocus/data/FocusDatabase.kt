@@ -76,7 +76,11 @@ interface SoundDao {
     suspend fun deleteSound(sound: SoundEntity)
 }
 
-@Database(entities = [SessionEntity::class, SoundEntity::class, TagEntity::class], version = 3)
+@Database(
+    entities = [SessionEntity::class, SoundEntity::class, TagEntity::class],
+    version = 3,
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
     abstract fun soundDao(): SoundDao
@@ -92,7 +96,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java, "deepfocus-db"
                 )
-                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigration(dropAllTables = true)
                 .build()
                 INSTANCE = instance
                 instance
