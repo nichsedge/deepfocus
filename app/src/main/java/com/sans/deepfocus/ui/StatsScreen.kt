@@ -74,9 +74,9 @@ fun StatsScreen(viewModel: StatsViewModel) {
     val tagData by viewModel.focusByTag.collectAsState(initial = emptyList())
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         item {
             Text(
