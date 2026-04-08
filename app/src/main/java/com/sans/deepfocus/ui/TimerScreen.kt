@@ -21,8 +21,7 @@ import com.sans.deepfocus.domain.SessionState
 
 @Composable
 fun TimerScreen(viewModel: TimerViewModel) {
-    val remainingTime by viewModel.remainingTime.collectAsState()
-    val elapsedTime by viewModel.elapsedTime.collectAsState()
+    val displayTime by viewModel.displayTime.collectAsState()
     val sessionState by viewModel.sessionState.collectAsState()
     val sessionMode by viewModel.sessionMode.collectAsState()
     val selectedSound by viewModel.selectedSound.collectAsState()
@@ -36,17 +35,11 @@ fun TimerScreen(viewModel: TimerViewModel) {
     var showTagDialog by remember { mutableStateOf(false) }
     var newTagName by remember { mutableStateOf("") }
 
-    val displayTime = if (sessionMode == SessionMode.POMODORO) {
-        viewModel.formatTime(remainingTime)
-    } else {
-        viewModel.formatTime(elapsedTime)
-    }
-
     val backgroundColor by animateColorAsState(
         when (sessionMode) {
             SessionMode.POMODORO -> MaterialTheme.colorScheme.primary.copy(alpha = 0.03f)
             SessionMode.STOPWATCH -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.03f)
-        }
+        }, label = "backgroundColor"
     )
 
     Surface(
@@ -337,7 +330,7 @@ fun DurationSelector(currentMinutes: Int, onDurationChange: (Int) -> Unit) {
 
 @Composable
 fun TimerDisplay(time: String, state: SessionState) {
-    val scale by animateFloatAsState(if (state == SessionState.RUNNING) 1.05f else 1f)
+    val scale by animateFloatAsState(if (state == SessionState.RUNNING) 1.05f else 1f, label = "scale")
     
     Box(
         modifier = Modifier
