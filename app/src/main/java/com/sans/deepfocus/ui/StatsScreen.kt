@@ -19,8 +19,9 @@ import com.sans.deepfocus.data.SessionEntity
 import com.sans.deepfocus.data.TagDao
 import com.sans.deepfocus.data.TagEntity
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.SupervisorJob
 import java.time.*
@@ -62,24 +63,25 @@ class StatsViewModel(
     val weeklyDistribution = sessionDao.getSessionsSince(
         LocalDate.now().minusDays(6).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     ).map { sessions ->
+        val sessionsByDate = sessions.groupBy {
+            Instant.ofEpochMilli(it.startTime).atZone(ZoneId.systemDefault()).toLocalDate()
+        }.mapValues { entry -> entry.value.sumOf { it.duration } }
+
         val last7Days = (0..6).map { LocalDate.now().minusDays(it.toLong()) }.reversed()
         last7Days.map { date ->
-            val dailySum = sessions.filter {
-                Instant.ofEpochMilli(it.startTime).atZone(ZoneId.systemDefault()).toLocalDate() == date
-            }.sumOf { it.duration }
             DayFocus(
                 label = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
-                durationMs = dailySum
+                durationMs = sessionsByDate[date] ?: 0L
             )
         }
-    }
+    }.flowOn(Dispatchers.Default)
 
     val focusByTag = sessionDao.getAllSessions().map { sessions ->
         sessions.groupBy { it.tag ?: "No Tag" }
             .mapValues { entry -> entry.value.sumOf { it.duration } }
             .toList()
             .sortedByDescending { it.second }
-    }
+    }.flowOn(Dispatchers.Default)
 
     fun formatDuration(ms: Long): String {
         val hours = ms / (1000 * 60 * 60)
@@ -307,7 +309,7 @@ fun SessionLogItem(
 
 @Composable
 fun TagBreakdown(tagData: List<Pair<String, Long>>, viewModel: StatsViewModel) {
-    val totalTime = tagData.sumOf { it.second }.coerceAtLeast(1L)
+    val totalTime = remember(tagData) { tagData.sumOf { it.second }.coerceAtLeast(1L) }
     
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -345,7 +347,7 @@ fun TagBreakdown(tagData: List<Pair<String, Long>>, viewModel: StatsViewModel) {
 
 @Composable
 fun WeeklyDistributionChart(data: List<DayFocus>) {
-    val maxDuration = data.maxOfOrNull { it.durationMs }?.coerceAtLeast(1L) ?: 1L
+    val maxDuration = remember(data) { data.maxOfOrNull { it.durationMs }?.coerceAtLeast(1L) ?: 1L }
     
     ElevatedCard(
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),

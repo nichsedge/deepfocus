@@ -24,11 +24,22 @@ class TimerViewModel(
     private val tagDao: com.sans.deepfocus.data.TagDao
 ) : AndroidViewModel(application) {
     private val analytics = AnalyticsProvider.get()
-    val remainingTime: StateFlow<Long> = timerManager.remainingTime
-    val elapsedTime: StateFlow<Long> = timerManager.elapsedTime
     val sessionState: StateFlow<SessionState> = timerManager.sessionState
     val sessionMode: StateFlow<SessionMode> = timerManager.sessionMode
     
+    val displayTime: StateFlow<String> = combine(
+        timerManager.sessionMode,
+        timerManager.remainingTime,
+        timerManager.elapsedTime
+    ) { mode, remaining, elapsed ->
+        if (mode == SessionMode.POMODORO) {
+            formatTime(remaining)
+        } else {
+            formatTime(elapsed)
+        }
+    }.distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), formatTime(timerManager.remainingTime.value))
+
     private val prefs = application.getSharedPreferences("deepfocus_prefs", android.content.Context.MODE_PRIVATE)
     private val _isMuted = MutableStateFlow(prefs.getBoolean("is_muted", false))
     val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
