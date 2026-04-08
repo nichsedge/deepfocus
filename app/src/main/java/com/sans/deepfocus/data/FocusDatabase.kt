@@ -26,6 +26,9 @@ interface SessionDao {
 
     @Query("SELECT COUNT(*) FROM sessions WHERE startTime >= :since")
     fun getSessionCountSince(since: Long): Flow<Int>
+
+    @Query("SELECT * FROM sessions WHERE startTime >= :since")
+    fun getSessionsSince(since: Long): Flow<List<SessionEntity>>
 }
 
 @Database(entities = [SessionEntity::class], version = 1)
