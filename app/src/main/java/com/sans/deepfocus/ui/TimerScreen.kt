@@ -2,6 +2,11 @@ package com.sans.deepfocus.ui
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -337,12 +342,23 @@ fun DurationSelector(currentMinutes: Int, onDurationChange: (Int) -> Unit) {
 
 @Composable
 fun TimerDisplay(time: String, state: SessionState) {
-    val scale by animateFloatAsState(if (state == SessionState.RUNNING) 1.05f else 1f)
+    val infiniteTransition = rememberInfiniteTransition()
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (state == SessionState.RUNNING) 1.05f else 1f,
+        animationSpec = if (state == SessionState.RUNNING) infiniteRepeatable(
+            animation = tween(1000),
+            repeatMode = RepeatMode.Reverse
+        ) else infiniteRepeatable(
+            animation = tween(100),
+            repeatMode = RepeatMode.Restart
+        )
+    )
     
     Box(
         modifier = Modifier
             .size(280.dp)
-            .scale(scale),
+            .scale(if (state == SessionState.RUNNING) scale else 1f),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
@@ -353,7 +369,7 @@ fun TimerDisplay(time: String, state: SessionState) {
         )
         Text(
             text = time,
-            fontSize = 72.sp,
+            fontSize = 96.sp,
             fontWeight = FontWeight.Light,
             letterSpacing = 2.sp,
             color = MaterialTheme.colorScheme.onBackground
