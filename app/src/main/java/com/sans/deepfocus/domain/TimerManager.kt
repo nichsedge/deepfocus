@@ -137,11 +137,16 @@ class TimerManager private constructor(private val sessionDao: SessionDao) {
                 if (_sessionMode.value == SessionMode.POMODORO) {
                     val remaining = initialDuration - currentElapsed
                     if (remaining <= 0) {
+                        val finalElapsed = currentElapsed.coerceAtLeast(initialDuration)
+                        if (finalElapsed > 60 * 1000) { // Only save sessions longer than 1 minute
+                            saveSession(finalElapsed)
+                        }
                         _remainingTime.value = 0
+                        _elapsedTime.value = 0
                         _sessionState.value = SessionState.IDLE
                         AnalyticsProvider.get().trackEvent("session_completed", mapOf(
                             "mode" to _sessionMode.value.name,
-                            "duration" to initialDuration
+                            "duration" to finalElapsed
                         ))
                         cancel()
                     } else {
