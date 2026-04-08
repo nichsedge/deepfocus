@@ -5,6 +5,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Whatshot
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,8 +16,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sans.deepfocus.data.SessionDao
 import com.sans.deepfocus.data.SessionEntity
+import com.sans.deepfocus.data.TagDao
+import com.sans.deepfocus.data.TagEntity
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.SupervisorJob
 import java.time.*
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
 import androidx.compose.ui.graphics.Color
@@ -25,9 +34,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 
-class StatsViewModel(private val sessionDao: SessionDao) {
+class StatsViewModel(
+    private val sessionDao: SessionDao,
+    private val tagDao: TagDao
+) {
+    private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     private fun getStartOfToday(): Long {
         return LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    }
+
+    val allSessions = sessionDao.getAllSessions()
+
+    val availableTags = tagDao.getAllTags()
+
+    fun updateSessionTag(sessionId: Long, tag: String?) {
+        coroutineScope.launch {
+            sessionDao.updateSessionTag(sessionId, tag)
+        }
     }
 
     val totalFocusTimeToday = sessionDao.getTotalFocusTimeSince(getStartOfToday())
@@ -72,6 +96,11 @@ fun StatsScreen(viewModel: StatsViewModel) {
     val sessionCount by viewModel.sessionCountToday.collectAsState(initial = 0)
     val weeklyData by viewModel.weeklyDistribution.collectAsState(initial = emptyList())
     val tagData by viewModel.focusByTag.collectAsState(initial = emptyList())
+    val allSessions by viewModel.allSessions.collectAsState(initial = emptyList())
+    val availableTags by viewModel.availableTags.collectAsState(initial = emptyList())
+
+    var showEditTagDialog by remember { mutableStateOf(false) }
+    var sessionToEdit by remember { mutableStateOf<SessionEntity?>(null) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(24.dp),
@@ -112,6 +141,165 @@ fun StatsScreen(viewModel: StatsViewModel) {
         if (tagData.isNotEmpty()) {
             item {
                 TagBreakdown(tagData, viewModel)
+            }
+        }
+
+        // Session Logs
+        if (allSessions.isNotEmpty()) {
+            item {
+                Text(
+                    "Session History",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp)
+                )
+            }
+            items(allSessions.size) { index ->
+                val session = allSessions[index]
+                SessionLogItem(
+                    session = session,
+                    viewModel = viewModel,
+                    onEditTagClick = {
+                        sessionToEdit = session
+                        showEditTagDialog = true
+                    }
+                )
+            }
+        }
+    }
+
+    if (showEditTagDialog && sessionToEdit != null) {
+        var expanded by remember { mutableStateOf(false) }
+        var selectedTag by remember { mutableStateOf(sessionToEdit?.tag) }
+
+        AlertDialog(
+            onDismissRequest = {
+                showEditTagDialog = false
+                sessionToEdit = null
+            },
+            title = { Text("Edit Session Tag") },
+            text = {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { expanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(selectedTag ?: "None")
+                        Spacer(Modifier.weight(1f))
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Tag")
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.fillMaxWidth(0.8f)
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("None") },
+                            onClick = {
+                                selectedTag = null
+                                expanded = false
+                            }
+                        )
+                        availableTags.forEach { tag ->
+                            DropdownMenuItem(
+                                text = { Text(tag.name) },
+                                onClick = {
+                                    selectedTag = tag.name
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        sessionToEdit?.let {
+                            viewModel.updateSessionTag(it.id, selectedTag)
+                        }
+                        showEditTagDialog = false
+                        sessionToEdit = null
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showEditTagDialog = false
+                        sessionToEdit = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun SessionLogItem(
+    session: SessionEntity,
+    viewModel: StatsViewModel,
+    onEditTagClick: () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                val date = Instant.ofEpochMilli(session.startTime).atZone(ZoneId.systemDefault())
+                val formatter = DateTimeFormatter.ofPattern("MMM dd, HH:mm")
+                Text(
+                    text = date.format(formatter),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = viewModel.formatDuration(session.duration),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = session.mode,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = session.tag ?: "No Tag",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
+            }
+            IconButton(onClick = onEditTagClick) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit Tag",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
