@@ -1,6 +1,5 @@
 package com.sans.deepfocus.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -36,7 +35,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun DeepfocusTheme(
-    darkTheme: Boolean = true,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false, // Always use our custom theme for consistent branding
     content: @Composable () -> Unit

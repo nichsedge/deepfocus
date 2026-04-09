@@ -1,39 +1,69 @@
 package com.sans.deepfocus.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Whatshot
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sans.deepfocus.data.SessionDao
 import com.sans.deepfocus.data.SessionEntity
 import com.sans.deepfocus.data.TagDao
-import com.sans.deepfocus.data.TagEntity
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import java.time.*
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
-import java.util.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
+import java.util.Locale
 
 class StatsViewModel(
     private val sessionDao: SessionDao,
@@ -105,7 +135,9 @@ fun StatsScreen(viewModel: StatsViewModel) {
     var sessionToEdit by remember { mutableStateOf<SessionEntity?>(null) }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
@@ -113,12 +145,17 @@ fun StatsScreen(viewModel: StatsViewModel) {
             Text(
                 "Analytics",
                 style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
             )
         }
-        
+
         item {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 StatCard(
                     title = "Focus Time",
                     value = viewModel.formatDuration(focusTime),
@@ -152,7 +189,9 @@ fun StatsScreen(viewModel: StatsViewModel) {
                 Text(
                     "Session History",
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp)
                 )
             }
             items(allSessions.size) { index ->
@@ -251,7 +290,9 @@ fun SessionLogItem(
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -310,7 +351,7 @@ fun SessionLogItem(
 @Composable
 fun TagBreakdown(tagData: List<Pair<String, Long>>, viewModel: StatsViewModel) {
     val totalTime = remember(tagData) { tagData.sumOf { it.second }.coerceAtLeast(1L) }
-    
+
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -324,18 +365,26 @@ fun TagBreakdown(tagData: List<Pair<String, Long>>, viewModel: StatsViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
             tagData.forEach { (tag, duration) ->
                 val proportion = duration.toFloat() / totalTime
-                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Column(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(tag, style = MaterialTheme.typography.bodyMedium)
-                        Text(viewModel.formatDuration(duration), style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            viewModel.formatDuration(duration),
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     LinearProgressIndicator(
                         progress = { proportion },
-                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
                         color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
@@ -348,13 +397,17 @@ fun TagBreakdown(tagData: List<Pair<String, Long>>, viewModel: StatsViewModel) {
 @Composable
 fun WeeklyDistributionChart(data: List<DayFocus>) {
     val maxDuration = remember(data) { data.maxOfOrNull { it.durationMs }?.coerceAtLeast(1L) ?: 1L }
-    
+
     ElevatedCard(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp).fillMaxWidth()
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
         ) {
             Text(
                 "Weekly Activity",
@@ -363,7 +416,9 @@ fun WeeklyDistributionChart(data: List<DayFocus>) {
             )
             Spacer(modifier = Modifier.height(24.dp))
             Row(
-                modifier = Modifier.fillMaxWidth().height(160.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
@@ -371,7 +426,7 @@ fun WeeklyDistributionChart(data: List<DayFocus>) {
                     val barHeightProportion = remember(dayFocus.durationMs, maxDuration) {
                         dayFocus.durationMs.toFloat() / maxDuration
                     }
-                    
+
                     val animatedHeight by animateFloatAsState(
                         targetValue = barHeightProportion,
                         animationSpec = spring(stiffness = Spring.StiffnessLow),
@@ -388,7 +443,7 @@ fun WeeklyDistributionChart(data: List<DayFocus>) {
                                 .width(12.dp)
                                 .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                 .background(
-                                    if (dayFocus.durationMs > 0) MaterialTheme.colorScheme.primary 
+                                    if (dayFocus.durationMs > 0) MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.surfaceVariant
                                 )
                         )
@@ -412,13 +467,23 @@ fun StatCard(title: String, value: String, icon: ImageVector, modifier: Modifier
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Column {
-                Text(value, fontSize = 24.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                Text(title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                Text(
+                    value,
+                    fontSize = 24.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                )
+                Text(
+                    title,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
             }
         }
     }

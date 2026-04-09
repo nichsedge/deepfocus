@@ -1,6 +1,15 @@
 package com.sans.deepfocus.data
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Database
+import androidx.room.Delete
+import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.PrimaryKey
+import androidx.room.Query
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "sessions")
@@ -16,7 +25,7 @@ data class SessionEntity(
 @Entity(tableName = "tags")
 data class TagEntity(
     @PrimaryKey val name: String,
-    val color: Int = 0xFF6200EE.toInt() 
+    val color: Int = 0xFF6200EE.toInt()
 )
 
 @Entity(tableName = "sounds")
@@ -99,8 +108,8 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java, "deepfocus-db"
                 )
-                .fallbackToDestructiveMigration(dropAllTables = true)
-                .build()
+                    .fallbackToDestructiveMigration(dropAllTables = true)
+                    .build()
                 INSTANCE = instance
                 instance
             }

@@ -1,12 +1,18 @@
 package com.sans.deepfocus.domain
 
+import com.sans.deepfocus.analytics.AnalyticsProvider
 import com.sans.deepfocus.data.SessionDao
 import com.sans.deepfocus.data.SessionEntity
-import com.sans.deepfocus.analytics.AnalyticsProvider
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 enum class SessionMode { POMODORO, STOPWATCH }
 enum class SessionState { IDLE, RUNNING, PAUSED }
@@ -26,6 +32,7 @@ class TimerManager private constructor(private val sessionDao: SessionDao) {
             }
         }
     }
+
     private var actualStartTime: Long = 0
     private var startTime: Long = 0
     private var pausedTime: Long = 0
@@ -144,16 +151,18 @@ class TimerManager private constructor(private val sessionDao: SessionDao) {
                         _remainingTime.value = 0
                         _elapsedTime.value = 0
                         _sessionState.value = SessionState.IDLE
-                        AnalyticsProvider.get().trackEvent("session_completed", mapOf(
-                            "mode" to _sessionMode.value.name,
-                            "duration" to finalElapsed
-                        ))
+                        AnalyticsProvider.get().trackEvent(
+                            "session_completed", mapOf(
+                                "mode" to _sessionMode.value.name,
+                                "duration" to finalElapsed
+                            )
+                        )
                         cancel()
                     } else {
                         _remainingTime.value = remaining
                     }
                 }
-                delay(100) 
+                delay(100)
             }
         }
     }
