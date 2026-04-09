@@ -428,7 +428,7 @@ fun WeeklyDistributionChart(data: List<DayFocus>) {
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).fillMaxHeight()
                     ) {
                         Box(
                             modifier = Modifier.weight(1f),
