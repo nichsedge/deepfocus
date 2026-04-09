@@ -365,9 +365,11 @@ fun TagBreakdown(tagData: List<Pair<String, Long>>, viewModel: StatsViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
             tagData.forEach { (tag, duration) ->
                 val proportion = duration.toFloat() / totalTime
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween

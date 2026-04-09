@@ -57,9 +57,11 @@ fun SoundSelectorDialog(
         onDismissRequest = onDismiss,
         title = { Text("Select Focus Sound") },
         text = {
-            Column(modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 400.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp)
+            ) {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(sounds) { sound ->
                         Row(
