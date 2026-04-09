@@ -41,6 +41,18 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
+            val timerViewModel = remember {
+                TimerViewModel(
+                    application,
+                    timerManager,
+                    database.soundDao(),
+                    database.tagDao()
+                )
+            }
+            val statsViewModel = remember {
+                StatsViewModel(database.sessionDao(), database.tagDao())
+            }
+
             DeepfocusTheme {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -63,13 +75,29 @@ class MainActivity : ComponentActivity() {
                                 icon = { Icon(Icons.Default.Timer, contentDescription = "Timer") },
                                 label = { Text("Timer") },
                                 selected = currentRoute == "timer",
-                                onClick = { navController.navigate("timer") }
+                                onClick = {
+                                    navController.navigate("timer") {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
                             )
                             NavigationBarItem(
                                 icon = { Icon(Icons.Default.Analytics, contentDescription = "Stats") },
                                 label = { Text("Stats") },
                                 selected = currentRoute == "stats",
-                                onClick = { navController.navigate("stats") }
+                                onClick = {
+                                    navController.navigate("stats") {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
                             )
                         }
                     }
@@ -80,15 +108,10 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("timer") {
-                            TimerScreen(TimerViewModel(
-                                application, 
-                                timerManager, 
-                                database.soundDao(),
-                                database.tagDao()
-                            ))
+                            TimerScreen(timerViewModel)
                         }
                         composable("stats") {
-                            StatsScreen(StatsViewModel(database.sessionDao(), database.tagDao()))
+                            StatsScreen(statsViewModel)
                         }
                     }
                 }
