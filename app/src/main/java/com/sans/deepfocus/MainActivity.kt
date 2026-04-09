@@ -8,21 +8,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.room.*
 import com.sans.deepfocus.analytics.AnalyticsProvider
 import com.sans.deepfocus.data.AppDatabase
-import com.sans.deepfocus.domain.TimerManager
-import com.sans.deepfocus.ui.*
-import com.sans.deepfocus.ui.theme.DeepfocusTheme
 import com.sans.deepfocus.data.SoundEntity
+import com.sans.deepfocus.domain.TimerManager
+import com.sans.deepfocus.ui.StatsScreen
+import com.sans.deepfocus.ui.StatsViewModel
+import com.sans.deepfocus.ui.TimerScreen
+import com.sans.deepfocus.ui.TimerViewModel
+import com.sans.deepfocus.ui.theme.DeepfocusTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -33,10 +41,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         database = AppDatabase.getInstance(this)
         timerManager = TimerManager.getInstance(database.sessionDao())
-        
+
         initializeData()
 
         enableEdgeToEdge()
@@ -48,8 +56,8 @@ class MainActivity : ComponentActivity() {
 
                 // Simple screen tracking
                 LaunchedEffect(currentRoute) {
-                    currentRoute?.let { 
-                        analytics.trackScreen(it) 
+                    currentRoute?.let {
+                        analytics.trackScreen(it)
                     }
                 }
 
@@ -66,7 +74,12 @@ class MainActivity : ComponentActivity() {
                                 onClick = { navController.navigate("timer") }
                             )
                             NavigationBarItem(
-                                icon = { Icon(Icons.Default.Analytics, contentDescription = "Stats") },
+                                icon = {
+                                    Icon(
+                                        Icons.Default.Analytics,
+                                        contentDescription = "Stats"
+                                    )
+                                },
                                 label = { Text("Stats") },
                                 selected = currentRoute == "stats",
                                 onClick = { navController.navigate("stats") }
@@ -80,12 +93,14 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("timer") {
-                            TimerScreen(TimerViewModel(
-                                application, 
-                                timerManager, 
-                                database.soundDao(),
-                                database.tagDao()
-                            ))
+                            TimerScreen(
+                                TimerViewModel(
+                                    application,
+                                    timerManager,
+                                    database.soundDao(),
+                                    database.tagDao()
+                                )
+                            )
                         }
                         composable("stats") {
                             StatsScreen(StatsViewModel(database.sessionDao(), database.tagDao()))
@@ -105,7 +120,7 @@ class MainActivity : ComponentActivity() {
                     SoundEntity(name = "No Sound", uri = "", isSelected = true)
                 )
             }
-            
+
             // Initialize Tags
             val tags = database.tagDao().getAllTags().first()
             if (tags.isEmpty()) {

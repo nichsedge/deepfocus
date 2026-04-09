@@ -4,7 +4,13 @@ import android.content.Context
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class FocusAudioManager(private val context: Context) {
     private var exoPlayer: ExoPlayer? = null
@@ -17,7 +23,7 @@ class FocusAudioManager(private val context: Context) {
     fun playSound(uriString: String) {
         if (currentUri == uriString && exoPlayer?.isPlaying == true) return
         currentUri = uriString
-        
+
         stopSound()
         exoPlayer = ExoPlayer.Builder(context).build().apply {
             val uri = when {

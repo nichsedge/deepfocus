@@ -1,23 +1,55 @@
 package com.sans.deepfocus.ui
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.foundation.layout.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Waves
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,11 +63,11 @@ fun TimerScreen(viewModel: TimerViewModel) {
     val sessionMode by viewModel.sessionMode.collectAsState()
     val selectedSound by viewModel.selectedSound.collectAsState()
     val pomodoroDuration by viewModel.pomodoroDuration.collectAsState()
-    
+
     val isMuted by viewModel.isMuted.collectAsState()
     val availableTags by viewModel.availableTags.collectAsState()
     val selectedTag by viewModel.selectedTag.collectAsState()
-    
+
     var showSoundSelector by remember { mutableStateOf(false) }
     var showTagDialog by remember { mutableStateOf(false) }
     var newTagName by remember { mutableStateOf("") }
@@ -65,12 +97,12 @@ fun TimerScreen(viewModel: TimerViewModel) {
                     ModeButton(
                         text = "Pomodoro",
                         isSelected = sessionMode == SessionMode.POMODORO,
-                        onClick = { viewModel.setMode(SessionMode.POMODORO) } 
+                        onClick = { viewModel.setMode(SessionMode.POMODORO) }
                     )
                     ModeButton(
                         text = "Stopwatch",
                         isSelected = sessionMode == SessionMode.STOPWATCH,
-                        onClick = { viewModel.setMode(SessionMode.STOPWATCH) } 
+                        onClick = { viewModel.setMode(SessionMode.STOPWATCH) }
                     )
                 }
                 if (sessionMode == SessionMode.POMODORO) {
@@ -197,7 +229,7 @@ fun TagSelector(
                     shape = RoundedCornerShape(12.dp)
                 )
             }
-            
+
             items(availableTags.size) { index ->
                 val tag = availableTags[index]
                 FilterChip(
@@ -221,13 +253,19 @@ fun TagSelector(
                     }
                 )
             }
-            
+
             item {
                 InputChip(
                     selected = false,
                     onClick = onAddTag,
                     label = { Text("Add Tag") },
-                    leadingIcon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
                     shape = RoundedCornerShape(12.dp)
                 )
             }
@@ -270,9 +308,9 @@ fun SoundIndicator(
                 )
             }
         }
-        
+
         Spacer(Modifier.width(2.dp))
-        
+
         Surface(
             onClick = onMuteToggle,
             shape = RoundedCornerShape(8.dp, 24.dp, 24.dp, 8.dp),
@@ -319,7 +357,9 @@ fun DurationSelector(currentMinutes: Int, onDurationChange: (Int) -> Unit) {
             Surface(
                 onClick = { onDurationChange(mins) },
                 shape = RoundedCornerShape(12.dp),
-                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(
+                    alpha = 0.3f
+                ),
                 modifier = Modifier.padding(horizontal = 4.dp)
             ) {
                 Text(
@@ -347,7 +387,7 @@ fun TimerDisplay(time: String, state: SessionState) {
             repeatMode = RepeatMode.Restart
         )
     )
-    
+
     Box(
         modifier = Modifier
             .size(280.dp)
@@ -379,38 +419,56 @@ fun FocusControls(state: SessionState, viewModel: TimerViewModel) {
     ) {
         when (state) {
             SessionState.IDLE -> {
-                LargeStartButton { 
+                LargeStartButton {
                     viewModel.start()
                 }
             }
+
             SessionState.RUNNING -> {
                 IconButton(
                     onClick = { viewModel.pause() },
                     modifier = Modifier.size(64.dp)
                 ) {
-                    Icon(Icons.Default.Pause, contentDescription = "Pause", modifier = Modifier.size(32.dp))
+                    Icon(
+                        Icons.Default.Pause,
+                        contentDescription = "Pause",
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
                 Spacer(Modifier.width(16.dp))
                 IconButton(
                     onClick = { viewModel.stop() },
                     modifier = Modifier.size(64.dp)
                 ) {
-                    Icon(Icons.Default.Stop, contentDescription = "Stop", modifier = Modifier.size(32.dp))
+                    Icon(
+                        Icons.Default.Stop,
+                        contentDescription = "Stop",
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
             }
+
             SessionState.PAUSED -> {
                 IconButton(
                     onClick = { viewModel.resume() },
                     modifier = Modifier.size(64.dp)
                 ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = "Resume", modifier = Modifier.size(32.dp))
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = "Resume",
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
                 Spacer(Modifier.width(16.dp))
                 IconButton(
                     onClick = { viewModel.stop() },
                     modifier = Modifier.size(64.dp)
                 ) {
-                    Icon(Icons.Default.Stop, contentDescription = "Stop", modifier = Modifier.size(32.dp))
+                    Icon(
+                        Icons.Default.Stop,
+                        contentDescription = "Stop",
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
             }
         }

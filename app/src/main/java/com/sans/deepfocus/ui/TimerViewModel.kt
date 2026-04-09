@@ -1,18 +1,25 @@
 package com.sans.deepfocus.ui
 
 import android.app.Application
+import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.sans.deepfocus.analytics.AnalyticsProvider
 import com.sans.deepfocus.data.SoundDao
 import com.sans.deepfocus.data.SoundEntity
-import com.sans.deepfocus.domain.*
-import android.content.Intent
-import android.provider.OpenableColumns
+import com.sans.deepfocus.domain.SessionMode
+import com.sans.deepfocus.domain.SessionState
+import com.sans.deepfocus.domain.TimerManager
 import com.sans.deepfocus.service.FocusService
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -26,7 +33,7 @@ class TimerViewModel(
     private val analytics = AnalyticsProvider.get()
     val sessionState: StateFlow<SessionState> = timerManager.sessionState
     val sessionMode: StateFlow<SessionMode> = timerManager.sessionMode
-    
+
     val displayTime: StateFlow<String> = combine(
         timerManager.sessionMode,
         timerManager.remainingTime,
@@ -38,9 +45,14 @@ class TimerViewModel(
             formatTime(elapsed)
         }
     }.distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), formatTime(timerManager.remainingTime.value))
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            formatTime(timerManager.remainingTime.value)
+        )
 
-    private val prefs = application.getSharedPreferences("deepfocus_prefs", android.content.Context.MODE_PRIVATE)
+    private val prefs =
+        application.getSharedPreferences("deepfocus_prefs", android.content.Context.MODE_PRIVATE)
     private val _isMuted = MutableStateFlow(prefs.getBoolean("is_muted", false))
     val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
 
@@ -99,13 +111,16 @@ class TimerViewModel(
 
     fun start() {
         analytics.trackEvent("timer_start", mapOf("mode" to sessionMode.value.name))
-        
+
         val intent = Intent(getApplication(), FocusService::class.java).apply {
             putExtra("MODE", sessionMode.value.name)
-            putExtra("DURATION", if (sessionMode.value == SessionMode.POMODORO) pomodoroDuration.value else 0L)
+            putExtra(
+                "DURATION",
+                if (sessionMode.value == SessionMode.POMODORO) pomodoroDuration.value else 0L
+            )
         }
         getApplication<Application>().startForegroundService(intent)
-        
+
         timerManager.start()
     }
 
@@ -122,7 +137,12 @@ class TimerViewModel(
     fun stop() {
         analytics.trackEvent("timer_stop")
         timerManager.stop()
-        getApplication<Application>().stopService(Intent(getApplication(), FocusService::class.java))
+        getApplication<Application>().stopService(
+            Intent(
+                getApplication(),
+                FocusService::class.java
+            )
+        )
     }
 
     fun selectSound(sound: SoundEntity) {
@@ -136,19 +156,20 @@ class TimerViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val context = getApplication<Application>()
-                
+
                 // Extract filename
                 var displayName = "Custom Sound"
                 context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                    val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    val nameIndex =
+                        cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
                     if (cursor.moveToFirst() && nameIndex != -1) {
                         displayName = cursor.getString(nameIndex)
                     }
                 }
-                
+
                 // Remove extension for display name
                 val name = displayName.substringBeforeLast(".")
-                
+
                 val soundsDir = File(context.filesDir, "custom_sounds")
                 if (!soundsDir.exists()) soundsDir.mkdirs()
 
