@@ -1,8 +1,5 @@
 package com.sans.deepfocus.ui
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -429,12 +426,6 @@ fun WeeklyDistributionChart(data: List<DayFocus>) {
                         dayFocus.durationMs.toFloat() / maxDuration
                     }
 
-                    val animatedHeight by animateFloatAsState(
-                        targetValue = barHeightProportion,
-                        animationSpec = spring(stiffness = Spring.StiffnessLow),
-                        label = "barHeight"
-                    )
-
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.weight(1f)
@@ -445,7 +436,7 @@ fun WeeklyDistributionChart(data: List<DayFocus>) {
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxHeight(animatedHeight.coerceAtLeast(0.02f))
+                                    .fillMaxHeight(barHeightProportion.coerceAtLeast(0.02f))
                                     .width(12.dp)
                                     .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                     .background(

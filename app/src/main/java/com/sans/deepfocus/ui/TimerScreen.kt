@@ -1,11 +1,5 @@
 package com.sans.deepfocus.ui
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -72,12 +65,10 @@ fun TimerScreen(viewModel: TimerViewModel) {
     var showTagDialog by remember { mutableStateOf(false) }
     var newTagName by remember { mutableStateOf("") }
 
-    val backgroundColor by animateColorAsState(
-        when (sessionMode) {
-            SessionMode.POMODORO -> MaterialTheme.colorScheme.primary.copy(alpha = 0.03f)
-            SessionMode.STOPWATCH -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.03f)
-        }, label = "backgroundColor"
-    )
+    val backgroundColor = when (sessionMode) {
+        SessionMode.POMODORO -> MaterialTheme.colorScheme.primary.copy(alpha = 0.03f)
+        SessionMode.STOPWATCH -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.03f)
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -375,23 +366,9 @@ fun DurationSelector(currentMinutes: Int, onDurationChange: (Int) -> Unit) {
 
 @Composable
 fun TimerDisplay(time: String, state: SessionState) {
-    val infiniteTransition = rememberInfiniteTransition()
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = if (state == SessionState.RUNNING) 1.05f else 1f,
-        animationSpec = if (state == SessionState.RUNNING) infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
-        ) else infiniteRepeatable(
-            animation = tween(100),
-            repeatMode = RepeatMode.Restart
-        )
-    )
-
     Box(
         modifier = Modifier
-            .size(280.dp)
-            .scale(if (state == SessionState.RUNNING) scale else 1f),
+            .size(280.dp),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
