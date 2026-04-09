@@ -440,20 +440,26 @@ fun WeeklyDistributionChart(data: List<DayFocus>) {
                         modifier = Modifier.weight(1f)
                     ) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxHeight(animatedHeight.coerceAtLeast(0.02f))
-                                .width(12.dp)
-                                .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                .background(
-                                    if (dayFocus.durationMs > 0) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.surfaceVariant
-                                )
-                        )
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.BottomCenter
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxHeight(animatedHeight.coerceAtLeast(0.02f))
+                                    .width(12.dp)
+                                    .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    .background(
+                                        if (dayFocus.durationMs > 0) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             dayFocus.label,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            maxLines = 1
                         )
                     }
                 }
