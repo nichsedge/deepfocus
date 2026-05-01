@@ -379,7 +379,7 @@ fun TimerDisplay(time: String, state: SessionState) {
         )
         Text(
             text = time,
-            fontSize = 96.sp,
+            fontSize = if (time.length > 5) 64.sp else 96.sp,
             fontWeight = FontWeight.Light,
             letterSpacing = 2.sp,
             color = MaterialTheme.colorScheme.onBackground
