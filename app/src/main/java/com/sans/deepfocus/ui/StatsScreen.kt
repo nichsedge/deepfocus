@@ -1,5 +1,6 @@
 package com.sans.deepfocus.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,9 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Edit
@@ -42,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -131,76 +133,83 @@ fun StatsScreen(viewModel: StatsViewModel) {
     var showEditTagDialog by remember { mutableStateOf(false) }
     var sessionToEdit by remember { mutableStateOf<SessionEntity?>(null) }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        item {
-            Text(
-                "Analytics",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            )
-        }
-
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                StatCard(
-                    title = "Focus Time",
-                    value = viewModel.formatDuration(focusTime),
-                    icon = Icons.Default.Timer,
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    title = "Sessions",
-                    value = sessionCount.toString(),
-                    icon = Icons.Default.Whatshot,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-
-        // Weekly Distribution Chart
-        item {
-            WeeklyDistributionChart(weeklyData)
-        }
-
-        // Tag Breakdown
-        if (tagData.isNotEmpty()) {
-            item {
-                TagBreakdown(tagData, viewModel)
-            }
-        }
-
-        // Session Logs
-        if (allSessions.isNotEmpty()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
             item {
                 Text(
-                    "Session History",
-                    style = MaterialTheme.typography.titleMedium,
+                    "ANALYTICS",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.secondary,
+                    letterSpacing = 1.5.sp
+                )
+                Text(
+                    "Performance Overview",
+                    style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 8.dp)
+                        .padding(top = 4.dp, bottom = 16.dp)
                 )
             }
-            items(allSessions.size) { index ->
-                val session = allSessions[index]
-                SessionLogItem(
-                    session = session,
-                    viewModel = viewModel,
-                    onEditTagClick = {
-                        sessionToEdit = session
-                        showEditTagDialog = true
-                    }
-                )
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    StatCard(
+                        title = "Focus Time Today",
+                        value = viewModel.formatDuration(focusTime),
+                        icon = Icons.Default.Timer,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatCard(
+                        title = "Sessions Today",
+                        value = sessionCount.toString(),
+                        icon = Icons.Default.Whatshot,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // Weekly Distribution Chart
+            item {
+                SectionHeader("WEEKLY ACTIVITY")
+                WeeklyDistributionChart(weeklyData)
+            }
+
+            // Tag Breakdown
+            if (tagData.isNotEmpty()) {
+                item {
+                    SectionHeader("FOCUS BY TAG")
+                    TagBreakdown(tagData, viewModel)
+                }
+            }
+
+            // Session Logs
+            if (allSessions.isNotEmpty()) {
+                item {
+                    SectionHeader("SESSION HISTORY")
+                }
+                items(allSessions.size) { index ->
+                    val session = allSessions[index]
+                    SessionLogItem(
+                        session = session,
+                        viewModel = viewModel,
+                        onEditTagClick = {
+                            sessionToEdit = session
+                            showEditTagDialog = true
+                        }
+                    )
+                }
             }
         }
     }
@@ -219,7 +228,8 @@ fun StatsScreen(viewModel: StatsViewModel) {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedButton(
                         onClick = { expanded = true },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.small
                     ) {
                         Text(selectedTag ?: "None")
                         Spacer(Modifier.weight(1f))
@@ -257,7 +267,8 @@ fun StatsScreen(viewModel: StatsViewModel) {
                         }
                         showEditTagDialog = false
                         sessionToEdit = null
-                    }
+                    },
+                    shape = MaterialTheme.shapes.small
                 ) {
                     Text("Save")
                 }
@@ -277,15 +288,25 @@ fun StatsScreen(viewModel: StatsViewModel) {
 }
 
 @Composable
+fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.secondary,
+        letterSpacing = 1.5.sp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp, bottom = 8.dp)
+    )
+}
+
+@Composable
 fun SessionLogItem(
     session: SessionEntity,
     viewModel: StatsViewModel,
     onEditTagClick: () -> Unit
 ) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
+    AtrackerCard {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -310,26 +331,26 @@ fun SessionLogItem(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Surface(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(12.dp)
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = MaterialTheme.shapes.small
                     ) {
                         Text(
                             text = session.mode,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        shape = RoundedCornerShape(12.dp)
+                        color = if (session.tag != null) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surfaceVariant,
+                        shape = MaterialTheme.shapes.small
                     ) {
                         Text(
                             text = session.tag ?: "No Tag",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                            color = if (session.tag != null) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -338,7 +359,8 @@ fun SessionLogItem(
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = "Edit Tag",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -349,23 +371,14 @@ fun SessionLogItem(
 fun TagBreakdown(tagData: List<Pair<String, Long>>, viewModel: StatsViewModel) {
     val totalTime = remember(tagData) { tagData.sumOf { it.second }.coerceAtLeast(1L) }
 
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                "Focus by Tag",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+    AtrackerCard {
+        Column(modifier = Modifier.padding(24.dp)) {
             tagData.forEach { (tag, duration) ->
                 val proportion = duration.toFloat() / totalTime
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(vertical = 6.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -374,17 +387,18 @@ fun TagBreakdown(tagData: List<Pair<String, Long>>, viewModel: StatsViewModel) {
                         Text(tag, style = MaterialTheme.typography.bodyMedium)
                         Text(
                             viewModel.formatDuration(duration),
-                            style = MaterialTheme.typography.labelSmall
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
                         progress = { proportion },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp)),
-                        color = MaterialTheme.colorScheme.primary,
+                            .height(6.dp)
+                            .clip(MaterialTheme.shapes.small),
+                        color = MaterialTheme.colorScheme.tertiary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 }
@@ -397,23 +411,12 @@ fun TagBreakdown(tagData: List<Pair<String, Long>>, viewModel: StatsViewModel) {
 fun WeeklyDistributionChart(data: List<DayFocus>) {
     val maxDuration = remember(data) { data.maxOfOrNull { it.durationMs }?.coerceAtLeast(1L) ?: 1L }
 
-    ElevatedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
+    AtrackerCard {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(24.dp)
                 .fillMaxWidth()
         ) {
-            Text(
-                "Weekly Activity",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(24.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -428,7 +431,9 @@ fun WeeklyDistributionChart(data: List<DayFocus>) {
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f).fillMaxHeight()
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
                     ) {
                         Box(
                             modifier = Modifier.weight(1f),
@@ -437,15 +442,15 @@ fun WeeklyDistributionChart(data: List<DayFocus>) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxHeight(barHeightProportion.coerceAtLeast(0.02f))
-                                    .width(12.dp)
-                                    .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    .width(16.dp)
+                                    .clip(MaterialTheme.shapes.small)
                                     .background(
                                         if (dayFocus.durationMs > 0) MaterialTheme.colorScheme.primary
                                         else MaterialTheme.colorScheme.surfaceVariant
                                     )
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             dayFocus.label,
                             style = MaterialTheme.typography.labelSmall,
@@ -461,29 +466,55 @@ fun WeeklyDistributionChart(data: List<DayFocus>) {
 
 @Composable
 fun StatCard(title: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
-    ElevatedCard(
-        modifier = modifier.height(120.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
+    AtrackerCard(modifier = modifier.height(140.dp)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(24.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
             Column {
                 Text(
                     value,
-                    fontSize = 24.sp,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     title,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
             }
         }
+    }
+}
+
+@Composable
+fun AtrackerCard(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            width = 1.dp,
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f)
+                )
+            )
+        )
+    ) {
+        content()
     }
 }

@@ -1,5 +1,7 @@
 package com.sans.deepfocus.ui
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,10 +10,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -43,6 +46,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,14 +70,9 @@ fun TimerScreen(viewModel: TimerViewModel) {
     var showTagDialog by remember { mutableStateOf(false) }
     var newTagName by remember { mutableStateOf("") }
 
-    val backgroundColor = when (sessionMode) {
-        SessionMode.POMODORO -> MaterialTheme.colorScheme.primary.copy(alpha = 0.03f)
-        SessionMode.STOPWATCH -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.03f)
-    }
-
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = backgroundColor
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -120,7 +120,7 @@ fun TimerScreen(viewModel: TimerViewModel) {
                     selectedTag?.let {
                         Surface(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = MaterialTheme.shapes.small,
                             modifier = Modifier.padding(top = 4.dp)
                         ) {
                             Text(
@@ -217,7 +217,7 @@ fun TagSelector(
                     selected = selectedTag == null,
                     onClick = { onTagSelect(null) },
                     label = { Text("None") },
-                    shape = RoundedCornerShape(12.dp)
+                    shape = MaterialTheme.shapes.small
                 )
             }
 
@@ -227,7 +227,7 @@ fun TagSelector(
                     selected = selectedTag == tag.name,
                     onClick = { onTagSelect(tag.name) },
                     label = { Text(tag.name) },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.small,
                     trailingIcon = {
                         if (selectedTag == tag.name) {
                             IconButton(
@@ -257,7 +257,7 @@ fun TagSelector(
                             modifier = Modifier.size(18.dp)
                         )
                     },
-                    shape = RoundedCornerShape(12.dp)
+                    shape = MaterialTheme.shapes.small
                 )
             }
         }
@@ -278,8 +278,8 @@ fun SoundIndicator(
     ) {
         Surface(
             onClick = onClick,
-            shape = RoundedCornerShape(24.dp, 8.dp, 8.dp, 24.dp),
-            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         ) {
             Row(
                 modifier = Modifier.padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
@@ -288,30 +288,30 @@ fun SoundIndicator(
                 Icon(
                     Icons.Default.Waves,
                     contentDescription = "Sound Settings",
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     selectedSound?.name ?: "No Sound",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
-        Spacer(Modifier.width(2.dp))
+        Spacer(Modifier.width(4.dp))
 
         Surface(
             onClick = onMuteToggle,
-            shape = RoundedCornerShape(8.dp, 24.dp, 24.dp, 8.dp),
-            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         ) {
             Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                 Icon(
                     if (isMuted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
                     contentDescription = if (isMuted) "Unmute" else "Mute",
-                    tint = if (isMuted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSecondaryContainer,
+                    tint = if (isMuted) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(16.dp)
                 )
             }
@@ -323,14 +323,16 @@ fun SoundIndicator(
 fun ModeButton(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
+        modifier = Modifier.height(48.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
             contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
         ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+        shape = MaterialTheme.shapes.small,
+        border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline) else null,
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
     ) {
-        Text(text)
+        Text(text, style = if (isSelected) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium)
     }
 }
 
@@ -347,7 +349,7 @@ fun DurationSelector(currentMinutes: Int, onDurationChange: (Int) -> Unit) {
             val isSelected = currentMinutes == mins
             Surface(
                 onClick = { onDurationChange(mins) },
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.small,
                 color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(
                     alpha = 0.3f
                 ),
@@ -368,22 +370,42 @@ fun DurationSelector(currentMinutes: Int, onDurationChange: (Int) -> Unit) {
 fun TimerDisplay(time: String, state: SessionState) {
     Box(
         modifier = Modifier
-            .size(280.dp),
+            .size(300.dp)
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(
-            progress = { 1f },
+        Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            strokeWidth = 8.dp
-        )
-        Text(
-            text = time,
-            fontSize = if (time.length > 5) 64.sp else 96.sp,
-            fontWeight = FontWeight.Light,
-            letterSpacing = 2.sp,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.4f)
+                    )
+                )
+            ),
+            shadowElevation = 2.dp
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    progress = { 1f },
+                    modifier = Modifier.size(240.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    strokeWidth = 4.dp
+                )
+                Text(
+                    text = time,
+                    // Dynamic font size adjustment for 60:00 vs HH:MM:SS
+                    fontSize = if (time.length > 5) 56.sp else 80.sp,
+                    fontWeight = FontWeight.Light,
+                    letterSpacing = 2.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
     }
 }
 
@@ -402,64 +424,58 @@ fun FocusControls(state: SessionState, viewModel: TimerViewModel) {
             }
 
             SessionState.RUNNING -> {
-                IconButton(
-                    onClick = { viewModel.pause() },
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Pause,
-                        contentDescription = "Pause",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                Spacer(Modifier.width(16.dp))
-                IconButton(
-                    onClick = { viewModel.stop() },
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Stop,
-                        contentDescription = "Stop",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+                ControlIconButton(icon = Icons.Default.Pause, onClick = { viewModel.pause() })
+                Spacer(Modifier.width(24.dp))
+                ControlIconButton(icon = Icons.Default.Stop, onClick = { viewModel.stop() })
             }
 
             SessionState.PAUSED -> {
-                IconButton(
-                    onClick = { viewModel.resume() },
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Icon(
-                        Icons.Default.PlayArrow,
-                        contentDescription = "Resume",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                Spacer(Modifier.width(16.dp))
-                IconButton(
-                    onClick = { viewModel.stop() },
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Icon(
-                        Icons.Default.Stop,
-                        contentDescription = "Stop",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+                ControlIconButton(icon = Icons.Default.PlayArrow, onClick = { viewModel.resume() })
+                Spacer(Modifier.width(24.dp))
+                ControlIconButton(icon = Icons.Default.Stop, onClick = { viewModel.stop() })
             }
         }
     }
 }
 
 @Composable
-fun LargeStartButton(onClick: () -> Unit) {
-    FloatingActionButton(
+fun ControlIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Surface(
         onClick = onClick,
-        containerColor = MaterialTheme.colorScheme.primary,
-        contentColor = MaterialTheme.colorScheme.onPrimary,
-        modifier = Modifier.size(80.dp)
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+        modifier = Modifier.size(64.dp)
     ) {
-        Icon(Icons.Default.PlayArrow, contentDescription = "Start", modifier = Modifier.size(40.dp))
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                icon,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+fun LargeStartButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .width(200.dp)
+            .height(58.dp),
+        shape = MaterialTheme.shapes.medium,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.PlayArrow, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("START FOCUS", style = MaterialTheme.typography.labelLarge)
+        }
     }
 }

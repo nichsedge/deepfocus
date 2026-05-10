@@ -212,10 +212,13 @@ class TimerViewModel(
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60
-        return if (hours > 0) {
+        
+        return if (hours > 0 && totalSeconds >= 6000) { // If it's 100+ minutes, use HH:MM:SS
             "%02d:%02d:%02d".format(hours, minutes, seconds)
         } else {
-            "%02d:%02d".format(minutes, seconds)
+            // Otherwise use MM:SS (e.g., 60:00 for 1 hour)
+            val displayMinutes = totalSeconds / 60
+            "%02d:%02d".format(displayMinutes, seconds)
         }
     }
 }
