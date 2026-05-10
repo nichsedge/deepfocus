@@ -47,7 +47,7 @@ class TimerViewModel(
     }.distinctUntilChanged()
         .stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
+            SharingStarted.Lazily,
             formatTime(timerManager.remainingTime.value)
         )
 
@@ -72,13 +72,13 @@ class TimerViewModel(
     }
 
     val availableSounds: StateFlow<List<SoundEntity>> = soundDao.getAllSounds()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     val selectedSound: StateFlow<SoundEntity?> = soundDao.getSelectedSound()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     val availableTags: StateFlow<List<com.sans.deepfocus.data.TagEntity>> = tagDao.getAllTags()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     val selectedTag: StateFlow<String?> = timerManager.selectedTag
 
