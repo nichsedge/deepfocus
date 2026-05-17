@@ -65,6 +65,26 @@ class TimerViewModel(
 
     val pomodoroDuration: StateFlow<Long> = timerManager.pomodoroDuration
 
+    val progress: StateFlow<Float> = combine(
+        timerManager.sessionMode,
+        timerManager.remainingTime,
+        timerManager.pomodoroDuration
+    ) { mode, remaining, duration ->
+        if (mode == SessionMode.POMODORO) {
+            if (duration > 0) {
+                (remaining.toFloat() / duration).coerceIn(0f, 1f)
+            } else {
+                1f
+            }
+        } else {
+            0f
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.Lazily,
+        1f
+    )
+
     fun setPomodoroDuration(minutes: Int) {
         val durationMs = minutes * 60 * 1000L
         timerManager.setPomodoroDuration(durationMs)

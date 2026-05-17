@@ -8,37 +8,37 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Slate50,
-    onPrimary = Slate900,
-    secondary = Slate500,
-    onSecondary = Slate50,
+    primary = Indigo500,
+    onPrimary = Color.White,
+    secondary = Slate400,
+    onSecondary = Color.White,
     tertiary = Emerald500,
     onTertiary = Color.White,
-    background = Slate900,
+    background = Color(0xFF090D16),
     onBackground = Slate50,
-    surface = Slate800,
+    surface = Color(0xFF131B2E),
     onSurface = Slate50,
-    surfaceVariant = Slate700,
+    surfaceVariant = Color(0xFF1E293B),
     onSurfaceVariant = Slate300,
-    outline = Slate500,
+    outline = Color(0xFF2E3B52),
     error = Rose500,
     onError = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Slate900,
+    primary = Indigo600,
     onPrimary = Color.White,
     secondary = Slate500,
     onSecondary = Color.White,
     tertiary = Emerald500,
     onTertiary = Color.White,
-    background = Slate50,
+    background = Color(0xFFF8FAFC),
     onBackground = Slate900,
     surface = Color.White,
     onSurface = Slate900,
     surfaceVariant = Slate100,
-    onSurfaceVariant = Slate500,
-    outline = Slate300,
+    onSurfaceVariant = Slate600,
+    outline = Slate200,
     error = Rose500,
     onError = Color.White
 )
