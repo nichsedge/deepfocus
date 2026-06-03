@@ -6,33 +6,17 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Outer Translucent Glow Ring -->
+    <!-- Outer Glow Ring (Indigo to Emerald gradient) -->
     <path
-        android:pathData="M 54, 54 m -44, 0 a 44,44 0 1,1 88,0 a 44,44 0 1,1 -88,0"
-        android:strokeWidth="1.5"
-        android:strokeColor="#1E2E4A"
-        android:fillColor="#00000000" />
-
-    <!-- Thin White Guideline / Inner Circle -->
-    <path
-        android:pathData="M 54, 54 m -32, 0 a 32,32 0 1,1 64,0 a 32,32 0 1,1 -64,0"
-        android:strokeWidth="1"
-        android:strokeColor="#25FFFFFF"
-        android:fillColor="#00000000" />
-
-    <!-- Sweeping Timer Progress Arc (Indigo to Emerald gradient) -->
-    <path
-        android:strokeWidth="4"
-        android:strokeLineCap="round"
-        android:strokeColor="#10B981"
-        android:fillColor="#00000000"
-        android:pathData="M 54,16 A 38,38 0 1,1 21.1,73">
+        android:pathData="M 54, 54 m -38, 0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"
+        android:strokeWidth="2"
+        android:fillColor="#00000000">
         <aapt:attr name="android:strokeColor">
             <gradient
-                android:startX="54"
+                android:startX="16"
                 android:startY="16"
-                android:endX="21.1"
-                android:endY="73"
+                android:endX="92"
+                android:endY="92"
                 android:type="linear">
                 <item android:color="#6366F1" android:offset="0.0" />
                 <item android:color="#10B981" android:offset="1.0" />
@@ -40,94 +24,30 @@
         </aapt:attr>
     </path>
 
-    <!-- Top Cap of Hourglass -->
+    <!-- Inner Subtle Accent Ring -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M 40,34 h 28 a 2,2 0 0,1 2,2 a 2,2 0 0,1 -2,2 h -28 a 2,2 0 0,1 -2,-2 a 2,2 0 0,1 2,-2 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="40"
-                android:startY="34"
-                android:endX="70"
-                android:endY="38"
-                android:type="linear">
-                <item android:color="#E2E8F0" android:offset="0.0" />
-                <item android:color="#94A3B8" android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+        android:pathData="M 54, 54 m -30, 0 a 30,30 0 1,1 60,0 a 30,30 0 1,1 -60,0"
+        android:strokeWidth="1"
+        android:strokeColor="#15FFFFFF"
+        android:fillColor="#00000000" />
 
-    <!-- Bottom Cap of Hourglass -->
+    <!-- Sand (Bottom Bulb - Emerald green pile) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M 40,70 h 28 a 2,2 0 0,1 2,2 a 2,2 0 0,1 -2,2 h -28 a 2,2 0 0,1 -2,-2 a 2,2 0 0,1 2,-2 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="40"
-                android:startY="70"
-                android:endX="70"
-                android:endY="74"
-                android:type="linear">
-                <item android:color="#94A3B8" android:offset="0.0" />
-                <item android:color="#E2E8F0" android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+        android:pathData="M 40.5,70 C 45.5,64.5 62.5,64.5 67.5,70 Z"
+        android:fillColor="#10B981" />
 
-    <!-- Hourglass Glass Bulb (Semi-transparent with white outline) -->
+    <!-- Hourglass Body Outline (Semi-transparent white) -->
     <path
-        android:strokeWidth="1.2"
-        android:strokeColor="#60FFFFFF"
-        android:pathData="M 42,38 C 42,47 50,51 50,54 C 50,57 42,61 42,70 L 66,70 C 66,61 58,57 58,54 C 58,51 66,47 66,38 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="42"
-                android:startY="38"
-                android:endX="66"
-                android:endY="70"
-                android:type="linear">
-                <item android:color="#25FFFFFF" android:offset="0.0" />
-                <item android:color="#02FFFFFF" android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+        android:pathData="M 40,36 C 40,47 50,51 50,54 C 50,57 40,61 40,72 H 68 C 68,61 58,57 58,54 C 58,51 68,47 68,36 Z"
+        android:strokeWidth="2"
+        android:strokeColor="#E2E8F0"
+        android:fillColor="#0FFFFFFF" />
 
-    <!-- Sand (Top Bulb - Emerald green) -->
+    <!-- Top & Bottom Plates (Solid Slate/White) -->
     <path
-        android:pathData="M 44,40 h 20 c 0,0 -2,5 -6,8 c -2,1.5 -4,2.5 -4,4 c 0,-1.5 -2,-2.5 -4,-4 c -4,-3 -6,-8 -6,-8 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="54"
-                android:startY="40"
-                android:endX="54"
-                android:endY="52"
-                android:type="linear">
-                <item android:color="#10B981" android:offset="0.0" />
-                <item android:color="#047857" android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
-
-    <!-- Sand Trickle Line -->
-    <path
-        android:strokeWidth="1.5"
-        android:strokeColor="#10B981"
-        android:pathData="M 54,53 L 54,67" />
-
-    <!-- Sand (Bottom Bulb - Emerald pile) -->
-    <path
-        android:pathData="M 43,69 C 48,64 60,64 65,69 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="54"
-                android:startY="64"
-                android:endX="54"
-                android:endY="69"
-                android:type="linear">
-                <item android:color="#34D399" android:offset="0.0" />
-                <item android:color="#059669" android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+        android:pathData="M 36,36 L 72,36 M 36,72 L 72,72"
+        android:strokeWidth="2.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
 
 </vector>
