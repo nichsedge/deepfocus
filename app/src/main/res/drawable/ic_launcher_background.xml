@@ -19,15 +19,5 @@
             </gradient>
         </aapt:attr>
     </path>
-    <!-- Subtle, soft background concentric circles -->
-    <path
-        android:pathData="M 54, 54 m -42, 0 a 42,42 0 1,1 84,0 a 42,42 0 1,1 -84,0"
-        android:strokeWidth="0.5"
-        android:strokeColor="#1F2D4D"
-        android:fillColor="#00000000" />
-    <path
-        android:pathData="M 54, 54 m -30, 0 a 30,30 0 1,1 60,0 a 30,30 0 1,1 -60,0"
-        android:strokeWidth="0.5"
-        android:strokeColor="#152037"
-        android:fillColor="#00000000" />
 </vector>
+
