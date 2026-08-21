@@ -7,6 +7,8 @@
 
 **DeepFocus** is a high-fidelity, premium Pomodoro and Stopwatch focus timer app designed specifically for Android. With a gorgeous, modern glassmorphic interface and deep ambient audio integration, DeepFocus elevates your productivity session by keeping you focused, calm, and distraction-free.
 
+![DeepFocus screenshots](media/screenshots.png)
+
 ---
 
 ## ✨ Features
