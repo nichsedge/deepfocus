@@ -54,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,6 +63,10 @@ import com.sans.deepfocus.domain.SessionState
 import com.sans.deepfocus.ui.theme.Emerald500
 import com.sans.deepfocus.ui.theme.Indigo500
 import com.sans.deepfocus.ui.theme.Indigo600
+
+private val isDarkTheme: Boolean
+    @Composable
+    get() = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
 @Composable
 fun TimerScreen(viewModel: TimerViewModel) {
@@ -80,15 +85,24 @@ fun TimerScreen(viewModel: TimerViewModel) {
     var showTagDialog by remember { mutableStateOf(false) }
     var newTagName by remember { mutableStateOf("") }
 
+    val isDark = isDarkTheme
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        Color(0xFF04060A)
-                    )
+                    colors = if (isDark) {
+                        listOf(
+                            MaterialTheme.colorScheme.background,
+                            Color(0xFF04060A)
+                        )
+                    } else {
+                        listOf(
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    }
                 )
             )
     ) {
@@ -100,7 +114,7 @@ fun TimerScreen(viewModel: TimerViewModel) {
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.08f else 0.05f),
                             Color.Transparent
                         )
                     )
@@ -123,12 +137,12 @@ fun TimerScreen(viewModel: TimerViewModel) {
                             .padding(horizontal = 24.dp, vertical = 12.dp)
                             .fillMaxWidth(0.85f)
                             .background(
-                                color = Color.White.copy(alpha = 0.04f),
+                                color = if (isDark) Color.White.copy(alpha = 0.04f) else MaterialTheme.colorScheme.surfaceVariant,
                                 shape = CircleShape
                             )
                             .border(
                                 width = 1.dp,
-                                color = Color.White.copy(alpha = 0.07f),
+                                color = if (isDark) Color.White.copy(alpha = 0.07f) else MaterialTheme.colorScheme.outline,
                                 shape = CircleShape
                             )
                             .padding(4.dp),
@@ -332,17 +346,20 @@ fun GlassChip(
     onDelete: (() -> Unit)? = null,
     isAdd: Boolean = false
 ) {
+    val isDark = isDarkTheme
     Box(
         modifier = Modifier
             .clip(CircleShape)
             .background(
                 if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                else Color.White.copy(alpha = 0.04f)
+                else if (isDark) Color.White.copy(alpha = 0.04f)
+                else MaterialTheme.colorScheme.surface
             )
             .border(
                 width = 1.dp,
                 color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                else Color.White.copy(alpha = 0.08f),
+                else if (isDark) Color.White.copy(alpha = 0.08f)
+                else MaterialTheme.colorScheme.outline,
                 shape = CircleShape
             )
             .clickable { onClick() }
@@ -395,6 +412,7 @@ fun SoundIndicator(
     onMuteToggle: () -> Unit,
     onClick: () -> Unit
 ) {
+    val isDark = isDarkTheme
     Row(
         modifier = Modifier.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -403,8 +421,12 @@ fun SoundIndicator(
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(width = 1.dp, color = Color.White.copy(alpha = 0.07f), shape = CircleShape)
+                .background(if (isDark) Color.White.copy(alpha = 0.04f) else MaterialTheme.colorScheme.surface)
+                .border(
+                    width = 1.dp,
+                    color = if (isDark) Color.White.copy(alpha = 0.07f) else MaterialTheme.colorScheme.outline,
+                    shape = CircleShape
+                )
                 .clickable { onClick() }
                 .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
@@ -430,8 +452,12 @@ fun SoundIndicator(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.04f))
-                .border(width = 1.dp, color = Color.White.copy(alpha = 0.07f), shape = CircleShape)
+                .background(if (isDark) Color.White.copy(alpha = 0.04f) else MaterialTheme.colorScheme.surface)
+                .border(
+                    width = 1.dp,
+                    color = if (isDark) Color.White.copy(alpha = 0.07f) else MaterialTheme.colorScheme.outline,
+                    shape = CircleShape
+                )
                 .clickable { onMuteToggle() },
             contentAlignment = Alignment.Center
         ) {
@@ -447,6 +473,7 @@ fun SoundIndicator(
 
 @Composable
 fun DurationSelector(currentMinutes: Int, onDurationChange: (Int) -> Unit) {
+    val isDark = isDarkTheme
     Row(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -462,12 +489,14 @@ fun DurationSelector(currentMinutes: Int, onDurationChange: (Int) -> Unit) {
                     .clip(CircleShape)
                     .background(
                         if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                        else Color.White.copy(alpha = 0.04f)
+                        else if (isDark) Color.White.copy(alpha = 0.04f)
+                        else MaterialTheme.colorScheme.surface
                     )
                     .border(
                         width = 1.dp,
                         color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                        else Color.White.copy(alpha = 0.08f),
+                        else if (isDark) Color.White.copy(alpha = 0.08f)
+                        else MaterialTheme.colorScheme.outline,
                         shape = CircleShape
                     )
                     .clickable { onDurationChange(mins) }
@@ -488,6 +517,7 @@ fun DurationSelector(currentMinutes: Int, onDurationChange: (Int) -> Unit) {
 
 @Composable
 fun TimerDisplay(time: String, progress: Float, state: SessionState) {
+    val isDark = isDarkTheme
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
         animationSpec = tween(
@@ -539,25 +569,35 @@ fun TimerDisplay(time: String, progress: Float, state: SessionState) {
             modifier = Modifier
                 .size(280.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.02f))
+                .background(if (isDark) Color.White.copy(alpha = 0.02f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.7f))
                 .border(
                     width = 1.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.08f),
-                            Color.White.copy(alpha = 0.02f)
+                    brush = if (isDark) {
+                        Brush.linearGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.08f),
+                                Color.White.copy(alpha = 0.02f)
+                            )
                         )
-                    ),
+                    } else {
+                        Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.outline,
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                            )
+                        )
+                    },
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
         ) {
+            val trackColor = if (isDark) Color.White.copy(alpha = 0.03f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
             // High-fidelity progress sweep
             androidx.compose.foundation.Canvas(modifier = Modifier.size(250.dp)) {
                 val strokeWidthPx = 8.dp.toPx()
                 // Track background
                 drawCircle(
-                    color = Color.White.copy(alpha = 0.03f),
+                    color = trackColor,
                     radius = size.minDimension / 2 - strokeWidthPx / 2,
                     style = androidx.compose.ui.graphics.drawscope.Stroke(width = strokeWidthPx)
                 )
@@ -648,17 +688,19 @@ fun ControlIconButton(
     isPrimary: Boolean = false,
     onClick: () -> Unit
 ) {
+    val isDark = isDarkTheme
     Box(
         modifier = Modifier
             .size(68.dp)
             .clip(CircleShape)
             .background(
                 if (isPrimary) Brush.linearGradient(colors = listOf(Indigo500, Indigo600))
-                else Brush.linearGradient(colors = listOf(Color.White.copy(alpha = 0.05f), Color.White.copy(alpha = 0.02f)))
+                else if (isDark) Brush.linearGradient(colors = listOf(Color.White.copy(alpha = 0.05f), Color.White.copy(alpha = 0.02f)))
+                else Brush.linearGradient(colors = listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceVariant))
             )
             .border(
                 width = 1.dp,
-                color = if (isPrimary) Color.Transparent else Color.White.copy(alpha = 0.08f),
+                color = if (isPrimary) Color.Transparent else if (isDark) Color.White.copy(alpha = 0.08f) else MaterialTheme.colorScheme.outline,
                 shape = CircleShape
             )
             .clickable { onClick() },
@@ -668,7 +710,7 @@ fun ControlIconButton(
             icon,
             contentDescription = null,
             modifier = Modifier.size(26.dp),
-            tint = Color.White
+            tint = if (isPrimary) Color.White else MaterialTheme.colorScheme.onSurface
         )
     }
 }
